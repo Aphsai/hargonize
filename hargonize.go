@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"reflect"
 	"os"
 	"path"
 	"strings"
 	"flag"
+	"bytes"
 )
 
 func download(url, filename string) (err error) {
@@ -34,24 +34,24 @@ func download(url, filename string) (err error) {
 }
 
 func compareExistingURLs(url string, filename string) {
-	fmt.Println("Checking if " + filename + " exists...")
 	_, err := os.Stat(filename)
 	if os.IsNotExist(err) {
-		//Create file if it does not exist
+		// Create file if it does not exist
 		err := download(url, filename)
 		if err != nil {
 			panic(err)
 		}
 		fmt.Println(filename + " created")
 	} else {
-		//Compare the two files, and if different, output updated
+		// Compare the two files, and if different, output updated
 		file, err := ioutil.ReadFile(filename)
 		if err != nil {
+			panic(err)
 		}
 		download(url, filename)
 		updated_file, err := ioutil.ReadFile(filename)
-		fmt.Println("Comparing previous version of " + filename)
-		if reflect.DeepEqual(file, updated_file) {
+//fmt.Println("Comparing previous version of " + filename)
+		if bytes.Equal(file, updated_file) {
 			fmt.Println(filename + " same")
 		} else {
 			fmt.Println(filename + " updated")
@@ -59,23 +59,19 @@ func compareExistingURLs(url string, filename string) {
 	}
 
 }
-//
-//func handleURLFlag(url, filename string) (err error) {
-//}
-//
-func handleDefault(urls []string) (err error) {
-	fmt.Println(len(urls))
+
+func handleFile(filename string) {
+	file, err := ioutil.ReadFile(filename)
+	if err != nil {
+		fmt.Println("...error in reading file!")
+	}
+	urls := strings.Split(string(file), "\n")
 	for _, url := range urls {
 		if url != "" {
 			compareExistingURLs(url, path.Base(url))
 		}
 	}
-	return
 }
-//
-//func handleFileFlag() (err error) {
-//}
-
 
 func main() {
 	// Set directory to $HOME/.hargonize
@@ -89,52 +85,13 @@ func main() {
 	pFile := flag.String("",  "", "File that contains urls")
 	flag.Parse()
 	url := *pUrl
-	file := *pFile
+	filename := *pFile
 	if url != "" {
 		fmt.Println("URL flag is not empty")
-		//filename := path.Base(url)
-		//handleURLFlag(url, filename)
-//		file, err := ioutil.ReadFile("urls")
-//		urls := strings.Split(string(file), "\n")
-//		fmt.Println(urls[0])
-//		if err != nil {
-//			panic(err)
-//		}
-//		return
-	} else if file != "" {
-		fmt.Println("File flag is not empty")
+		compareExistingURLs(url, path.Base(url))
+	} else if filename != "" {
+		handleFile(filename)
 	} else {
-		file, err := ioutil.ReadFile("urls")
-		if err != nil {
-			panic(err)
-		}
-		urls := strings.Split(string(file), "\n")
-		handleDefault(urls)
+		handleFile("urls")
 	}
-
-	//fmt.Println("Checking if " + filename + " exists...")
-//	_, err = os.Stat(filename)
-//	if os.IsNotExist(err) {
-//		err := download(url, filename)
-//		if err != nil {
-//			panic(err)
-//		}
-//		fmt.Println(filename + " created!")
-//	} else {
-//		//Compare the two files, and if different, output updated
-//		file, err := ioutil.ReadFile(filename)
-//		if err != nil {
-//			panic(err)
-//		}
-//		download(url, filename)
-//		updated_file, err := ioutil.ReadFile(filename)
-//		fmt.Println("Comparing previous version of " + filename)
-//		if reflect.DeepEqual(file, updated_file) {
-//			fmt.Println(filename + " same")
-//		} else {
-//			fmt.Println(filename + " updated")
-//		}
-//	}
 }
-
-
