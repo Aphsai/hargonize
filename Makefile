@@ -1,4 +1,4 @@
-URL=aphsai.github.io
+URL=http://aphsai.github.io
 
 default:
 	@echo "\033[92mProcessing ${URL}...\033[0m"
