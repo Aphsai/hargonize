@@ -10,6 +10,8 @@ import (
 	"strings"
 	"flag"
 	"bytes"
+	"github.com/godbus/dbus"
+	"github.com/esiqveland/notify"
 )
 
 func download(url, filename string) (err error) {
@@ -39,13 +41,14 @@ func download(url, filename string) (err error) {
 
 func compareExistingURLs(url string, filename string) {
 	_, err := os.Stat(filename)
+
 	if os.IsNotExist(err) {
 		// Create file if it does not exist
 		err := download(url, filename)
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(filename + " created")
+		sendNotification(filename + " was created")
 	} else {
 		// Compare the two files, and if different, output updated
 		file, err := ioutil.ReadFile(filename)
@@ -54,11 +57,25 @@ func compareExistingURLs(url string, filename string) {
 		}
 		download(url, filename)
 		updated_file, err := ioutil.ReadFile(filename)
-		if bytes.Equal(file, updated_file) {
-			fmt.Println(filename + " same")
-		} else {
-			fmt.Println(filename + " updated")
+		if !bytes.Equal(file, updated_file) {
+			sendNotification(filename + " was updated")
 		}
+	}
+}
+
+func sendNotification(summary string) {
+	conn, err := dbus.SessionBus()
+	if err != nil {
+		fmt.Println("Error connecting to dbus session")
+	}
+	notification := notify.Notification {
+		Summary: summary,
+		ExpireTimeout: int32(1000),
+	}
+
+	_, err = notify.SendNotification(conn, notification)
+	if err != nil {
+		fmt.Println("Error sending notification")
 	}
 
 }
