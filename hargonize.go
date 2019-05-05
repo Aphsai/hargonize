@@ -85,16 +85,14 @@ func main() {
 	}
 	// Handle flags
 	pUrl := flag.String("url", "", "URL to be processed")
-	pFile := flag.String("",  "", "File that contains urls")
+	pFile := flag.String("",  "urls", "File that contains urls")
 	flag.Parse()
 	url := *pUrl
 	filename := *pFile
 	if url != "" {
 		fmt.Println("URL flag is not empty")
 		compareExistingURLs(url, path.Base(url))
-	} else if filename != "" {
-		handleFile(filename)
 	} else {
-		handleFile("urls")
+		handleFile(filename)
 	}
 }
