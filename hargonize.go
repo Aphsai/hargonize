@@ -14,11 +14,15 @@ import (
 
 func download(url, filename string) (err error) {
 	//fmt.Println("Downloading ", url, " to ", filename)
+	//Create client
+	client := &http.Client{}
 	// Get response from URL
-	resp, err := http.Get(url)
+	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return
 	}
+	request.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.105 Safari/537.36 Vivaldi/2.4.1488.38")
+	resp, err := client.Do(request)
 	//Closes body of response when everything is done with
 	defer resp.Body.Close()
 	//Creates a file with the name of the url
@@ -50,7 +54,6 @@ func compareExistingURLs(url string, filename string) {
 		}
 		download(url, filename)
 		updated_file, err := ioutil.ReadFile(filename)
-//fmt.Println("Comparing previous version of " + filename)
 		if bytes.Equal(file, updated_file) {
 			fmt.Println(filename + " same")
 		} else {
