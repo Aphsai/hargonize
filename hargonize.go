@@ -46,6 +46,7 @@ func compareExistingURLs(url string, filename string) {
 		// Create file if it does not exist
 		err := download(url, filename)
 		if err != nil {
+			fmt.Println("Error in reading url file! Make sure the correct protocols are present")
 			panic(err)
 		}
 		sendNotification(filename + " was created")
@@ -67,6 +68,7 @@ func sendNotification(summary string) {
 	conn, err := dbus.SessionBus()
 	if err != nil {
 		fmt.Println("Error connecting to dbus session")
+		return
 	}
 	notification := notify.Notification {
 		Summary: summary,
@@ -76,14 +78,16 @@ func sendNotification(summary string) {
 	_, err = notify.SendNotification(conn, notification)
 	if err != nil {
 		fmt.Println("Error sending notification")
+		return
 	}
-
 }
 
 func handleFile(filename string) {
 	file, err := ioutil.ReadFile(filename)
 	if err != nil {
 		fmt.Println("...error in reading file!")
+		fmt.Println("If no file is specified, please ensure the 'urls' file exists at $HOME/.hargonize")
+		return
 	}
 	urls := strings.Split(string(file), "\n")
 	for _, url := range urls {
@@ -97,12 +101,12 @@ func main() {
 	// Set directory to $HOME/.hargonize
 	directory := os.Getenv("HOME") + "/.hargonize"
 	err := os.Chdir(directory)
-	if err != nil {
-		panic(err)
+	if os.IsNotExist(err) {
+		os.Mkdir(directory, os.ModePerm)
 	}
 	// Handle flags
 	pUrl := flag.String("url", "", "URL to be processed")
-	pFile := flag.String("",  "urls", "File that contains urls")
+	pFile := flag.String("f",  "urls", "File that contains urls")
 	flag.Parse()
 	url := *pUrl
 	filename := *pFile
